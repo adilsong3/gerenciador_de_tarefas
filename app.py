@@ -27,39 +27,21 @@
 # ○ Customize
 
 import os
-from time import sleep
+from menu import menu_de_opcoes
 
 tarefas_global = []
+tarefas_concluidas = []
 
 class GerenciadorTarefas:
     def __init__(self) -> None:
         self.main()
 
-    # 1. Menu de opções
-    def menu_de_opcoes(self):
-        menu = '''############################################################
-  ------------ ESCOLHA UMA DAS OPÇÕES ABAIXO ------------
-1 - Adicionar Tarefas (Adicione uma nova tarefa)
-2 - Visualizar Tarefas (Visualize todas as tarefas)
-3 - Marcar Tarefas (Marcar como concluído alguma tarefa)
-4 - Remover Tarefas (Remover tarefa criada)
-5 - Salvar Tarefas (Salvar as tarefas em um Banco de Dados)
-6 - Fechar Programa (Salva as tarefas e desliga o programa)
-############################################################'''
-
-        adicionar_tarefas = ('''---- Para Adicionar uma Nova Tarefa Escreva ela e aperte enter ---
-Exemplos: Arrumar a Cama, Estudar Inglês, Ir a Igreja
-----> Para sair basta digitar "Sair"''')
-        
-        visualizar_tarefas = '''--------- Tarefas Em Andamento ---------'''
-        return menu, adicionar_tarefas, visualizar_tarefas
-
     # 2. Adicionar Tarefas:
     def adicionar_tarefas(self):
-
+        global tarefas_global
         while True:
-            print(self.menu_de_opcoes()[1])
-            nova_tarefa = input('Tarefa: ').strip()
+            print(menu_de_opcoes()[1])
+            nova_tarefa = input('Digite o nome da tarefa: ').strip()
             if nova_tarefa.lower() == 'sair' or nova_tarefa.lower() == '"sair"':
                 break
             elif ',' in nova_tarefa:
@@ -73,32 +55,72 @@ Exemplos: Arrumar a Cama, Estudar Inglês, Ir a Igreja
 
     # 3. Visualizar Tarefas:
     def visualizar_tarefas(self):
+        global tarefas_global
+        global tarefas_concluidas
         if len(tarefas_global) == 0:
             print('Não há tarefas em andamento')
         else:
-            print(self.menu_de_opcoes()[2])
+            print(menu_de_opcoes()[2])
             for i, tarefa in enumerate(tarefas_global, start=1):
-                print(f"Tarefa: {i} {tarefa}")
+                if tarefa in tarefas_concluidas:
+                    print(f"{i} {tarefa} CONCLUÍDA")
+                else:
+                    print(f"{i} {tarefa} EM ANDAMENTO")
         while True:
-            escolha = input('Digite sair para voltar ao menu principal: ').strip()
+            escolha = input('Digite "sair" para voltar ao menu: ').strip()
             if escolha.lower() == 'sair' or escolha.lower() == '"sair"':
                 break
 
 
     # 4. Marcar Tarefas como Concluídas:
     def marcar_tarefas(self):
-        ''
+        global tarefas_global
+        global tarefas_concluidas
+        
 
     # 5. Remover Tarefas:
     def remover_tarefas(self):
-        ''
+        global tarefas_global
+        global tarefas_concluidas
+        if len(tarefas_global) == 0:
+            print('Não há tarefas em andamento')
+        else:
+            print(menu_de_opcoes()[2])
+            for i, tarefa in enumerate(tarefas_global, start=1):
+                if tarefa in tarefas_concluidas:
+                    print(f"{i} - {tarefa} CONCLUÍDA")
+                else:
+                    print(f"{i} - {tarefa} EM ANDAMENTO")
+            print(menu_de_opcoes()[4])
+        while True:
+            escolha = input('Digite o nome da tarefa: ').strip()
+            if escolha.lower() == 'sair' or escolha.lower() == '"sair"':
+                break
+            elif ',' in escolha:
+                tarefas_para_remover = escolha.split(',')
+                tarefas_para_remover_sem_espacos = [palavra.strip() for palavra in tarefas_para_remover]
+
+                for tarefa in tarefas_para_remover_sem_espacos:
+                    if tarefa not in tarefas_global:
+                        print(f'Tarefa "{tarefa}" não encontrada.')
+
+                tarefas_global = [tarefa for tarefa in tarefas_global if tarefa.lower() not in tarefas_para_remover_sem_espacos]
+
+            else:
+                if escolha.lower() not in tarefas_global:
+                    print(f'Tarefa "{escolha}" não encontrada.')
+                else: 
+                    tarefas_global = [tarefa for tarefa in tarefas_global if tarefa.lower() != escolha.lower()]
+                    print(f"Tarefa '{escolha}' removida com sucesso.")
+
 
     # 6. Salvar e Carregar Tarefas:
     def salvar_e_carregar_tarefas(self):
         ''
 
     def main(self):
-        menu = self.menu_de_opcoes()[0]
+        global tarefas_global
+        menu = menu_de_opcoes()[0]
         while True:
             os.system('cls' if os.name == 'nt' else 'clear')
             print(menu)
@@ -112,9 +134,11 @@ Exemplos: Arrumar a Cama, Estudar Inglês, Ir a Igreja
                 self.visualizar_tarefas()
                 
             elif escolha == '3':
+                os.system('cls' if os.name == 'nt' else 'clear')
                 self.marcar_tarefas()
                 
             elif escolha == '4':
+                os.system('cls' if os.name == 'nt' else 'clear')
                 self.remover_tarefas()
                 
             elif escolha == '5':
