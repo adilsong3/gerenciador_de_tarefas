@@ -26,11 +26,12 @@
 # 9. (bônus) - Personalização
 # ○ Customize
 
+import pandas as pd
 import os
+from datetime import datetime
 from menu import menu_de_opcoes
 
-tarefas_global = []
-tarefas_concluidas = []
+df_global = pd.DataFrame(columns=['data', 'tarefa', 'status'])
 
 class GerenciadorTarefas:
     def __init__(self) -> None:
@@ -38,7 +39,10 @@ class GerenciadorTarefas:
 
     # 2. Adicionar Tarefas:
     def adicionar_tarefas(self):
-        global tarefas_global
+        global df_global
+        hoje = datetime.now().strftime('%Y-%m-%d')  # Formata a data como 'YYYY-MM-DD'
+        status = 'Em andamento'
+
         while True:
             print(menu_de_opcoes()[1])
             nova_tarefa = input('Digite o nome da tarefa: ').strip()
@@ -46,26 +50,34 @@ class GerenciadorTarefas:
                 break
             elif ',' in nova_tarefa:
                 tarefas = nova_tarefa.split(',')
-                for tarefa in tarefas:
-                    tarefas_global.append(tarefa.strip())
+                novas_tarefas_df = pd.DataFrame({
+                    'data': [hoje] * len(tarefas),
+                    'tarefa': [t.strip() for t in tarefas],
+                    'status': [status] * len(tarefas)
+                })
+                df_global = pd.concat([df_global, novas_tarefas_df], ignore_index=True)
+                print(f'\nTarefas Adicionadas com Sucesso: \n{nova_tarefa}')
             else:
-                tarefas_global.append(nova_tarefa)
-            print(f'\nTarefas Adicionada com Sucesso!: {tarefas_global}')
+                novas_tarefas_df = pd.DataFrame({
+                    'data': [hoje],
+                    'tarefa': [nova_tarefa],
+                    'status': [status]
+                })
+                df_global = pd.concat([df_global, novas_tarefas_df], ignore_index=True)
+            print(f'\nTarefa Adicionada com Sucesso: \n{nova_tarefa}')
+
             
 
     # 3. Visualizar Tarefas:
     def visualizar_tarefas(self):
-        global tarefas_global
-        global tarefas_concluidas
-        if len(tarefas_global) == 0:
+        global df_global
+        
+        if len(df_global) == 0:
             print('Não há tarefas em andamento')
         else:
             print(menu_de_opcoes()[2])
-            for i, tarefa in enumerate(tarefas_global, start=1):
-                if tarefa in tarefas_concluidas:
-                    print(f"{i} {tarefa} CONCLUÍDA")
-                else:
-                    print(f"{i} {tarefa} EM ANDAMENTO")
+            print(df_global)
+            print('############################################################')
         while True:
             escolha = input('Digite "sair" para voltar ao menu: ').strip()
             if escolha.lower() == 'sair' or escolha.lower() == '"sair"':
@@ -73,24 +85,66 @@ class GerenciadorTarefas:
 
 
     # 4. Marcar Tarefas como Concluídas:
-    def marcar_tarefas(self):
-        global tarefas_global
-        global tarefas_concluidas
-        
+    def alterar_status_tarefas(self):
+        global df_global
 
-    # 5. Remover Tarefas:
-    def remover_tarefas(self):
-        global tarefas_global
-        global tarefas_concluidas
-        if len(tarefas_global) == 0:
+        df_comparacao = df_global.copy()
+        df_comparacao['tarefa'] = df_comparacao['tarefa'].str.lower()
+
+        if len(df_global) == 0:
             print('Não há tarefas em andamento')
         else:
             print(menu_de_opcoes()[2])
-            for i, tarefa in enumerate(tarefas_global, start=1):
-                if tarefa in tarefas_concluidas:
-                    print(f"{i} - {tarefa} CONCLUÍDA")
-                else:
-                    print(f"{i} - {tarefa} EM ANDAMENTO")
+            print(df_global)
+        while True:
+            print(menu_de_opcoes()[3])
+            escolha = input('Digite o nome da tarefa: ').strip()
+            os.system('cls' if os.name == 'nt' else 'clear')
+            if escolha.lower() == 'sair' or escolha.lower() == '"sair"':
+                break
+            else:
+                while True:
+                    novo_status = input('Digite o novo status das tarefas: ').strip()
+                    if novo_status.lower() in ('concluido','pausado'):
+                        if ',' in escolha:
+                            tarefa_escolhida = escolha.split(',')
+                            tarefa_escolhida = [tarefa.strip() for tarefa in tarefa_escolhida]
+                            tarefa_nao_encontrada = []
+                            tarefa_encontrada = []
+                            for tarefa in tarefa_escolhida:
+                                if tarefa not in df_global['tarefa'].str.lower().tolist():
+                                    tarefa_nao_encontrada.append(tarefa)
+                                else:
+                                    tarefa_encontrada.append(tarefa)
+
+                            if tarefa_encontrada:
+                                df_global.loc[df_comparacao['tarefa'].isin(tarefa_encontrada), 'status'] = novo_status
+                                print(f'Status da Tarefa {tarefa_encontrada} alterado com sucesso')
+                            if tarefa_nao_encontrada:
+                                print(f'Tarefa {tarefa_nao_encontrada} não encontrada.')
+                        else:
+                            if escolha.lower() not in df_global['tarefa'].str.lower().tolist():
+                                print(f'Tarefa "{escolha}" não encontrada.\n')
+                                print(df_global)
+                            else: 
+                                df_global.loc[df_comparacao['tarefa'] == escolha, 'status'] = novo_status
+                                print(f"Status da Tarefa '{escolha}' alterado com sucesso.")
+                        break
+                    else:
+                        print('Status não aceito, tente novamente!')
+
+    # 5. Remover Tarefas:
+    def remover_tarefas(self):
+        global df_global
+
+        df_comparacao = df_global.copy()
+        df_comparacao['tarefa'] = df_comparacao['tarefa'].str.lower()
+
+        if len(df_global) == 0:
+            print('Não há tarefas em andamento')
+        else:
+            print(menu_de_opcoes()[2])
+            print(df_global)
             print(menu_de_opcoes()[4])
         while True:
             escolha = input('Digite o nome da tarefa: ').strip()
@@ -98,19 +152,28 @@ class GerenciadorTarefas:
                 break
             elif ',' in escolha:
                 tarefas_para_remover = escolha.split(',')
-                tarefas_para_remover_sem_espacos = [palavra.strip() for palavra in tarefas_para_remover]
+                tarefas_para_remover_sem_espacos = [tarefa.strip() for tarefa in tarefas_para_remover]
+                tarefa_nao_encontrada = []
+                tarefa_encontrada = []
 
                 for tarefa in tarefas_para_remover_sem_espacos:
-                    if tarefa not in tarefas_global:
-                        print(f'Tarefa "{tarefa}" não encontrada.')
-
-                tarefas_global = [tarefa for tarefa in tarefas_global if tarefa.lower() not in tarefas_para_remover_sem_espacos]
-
+                    if tarefa not in df_global['tarefa'].str.lower().tolist():
+                        tarefa_nao_encontrada.append(tarefa)
+                    else:
+                        tarefa_encontrada.append(tarefa)
+                
+                if tarefa_encontrada:
+                    # Remove as tarefas especificadas
+                    df_global = df_global[~df_comparacao['tarefa'].isin(tarefa_encontrada)]
+                    print(f'Tarefa {tarefa_encontrada} removida com sucesso')
+                if tarefa_nao_encontrada:
+                    print(f'Tarefa {tarefa_nao_encontrada} não encontrada.')
+                
             else:
-                if escolha.lower() not in tarefas_global:
+                if escolha.lower() not in df_global['tarefa'].str.lower().tolist():
                     print(f'Tarefa "{escolha}" não encontrada.')
                 else: 
-                    tarefas_global = [tarefa for tarefa in tarefas_global if tarefa.lower() != escolha.lower()]
+                    df_global = df_global[df_comparacao['tarefa'] != escolha.lower()]
                     print(f"Tarefa '{escolha}' removida com sucesso.")
 
 
@@ -119,7 +182,7 @@ class GerenciadorTarefas:
         ''
 
     def main(self):
-        global tarefas_global
+        global df_global
         menu = menu_de_opcoes()[0]
         while True:
             os.system('cls' if os.name == 'nt' else 'clear')
@@ -135,7 +198,7 @@ class GerenciadorTarefas:
                 
             elif escolha == '3':
                 os.system('cls' if os.name == 'nt' else 'clear')
-                self.marcar_tarefas()
+                self.alterar_status_tarefas()
                 
             elif escolha == '4':
                 os.system('cls' if os.name == 'nt' else 'clear')

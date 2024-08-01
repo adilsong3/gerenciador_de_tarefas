@@ -9,20 +9,29 @@ def menu_de_opcoes():
 6 - Fechar Programa (Salva as tarefas e desliga o programa)
 ############################################################'''
 
-        adicionar_tarefas = ('''------------------------------------------------------------------
--- Para Adicionar uma Nova Tarefa Escreva ela e aperte enter --
+        adicionar_tarefas = ('''############################################################
+--- Menu Para Adicionar uma Nova Tarefa --- 
+Para Adicionar uma Nova Tarefa Escreva ela e aperte enter.
 Exemplos: Arrumar a Cama, Estudar Inglês, Ir a Igreja
 ----> Para voltar ao menu basta digite "Sair"
-------------------------------------------------------------------''')
+############################################################''')
         
-        visualizar_tarefas = '''--------- Tarefas Em Andamento ---------'''
+        visualizar_tarefas = '''############################################################
+--- Menu Para Apresentar as Tarefas Em Andamento ---'''
 
-        marcar_concluido = ''''''
+        marcar_concluido = '''############################################################
+--- Menu de Alteração dos Status das Tarefas ---
+Para alterar o status de uma tarefa, basta digitar uma das opções abaixo:
+-> Concluido
+-> Pausado
+----> Para voltar ao menu basta digite "Sair"
+'''
 
-        remover_tarefas = '''------------------------------------------------------------------
--- Para remover uma tarefa, basta digitar o nome dela e apertar enter --
+        remover_tarefas = '''############################################################
+--- Menu Para Remover Tarefas --- 
+Para remover uma tarefa, basta digitar o nome dela e apertar enter.
 Exemplos: Estudar Inglês, Estudar Python
 ----> Para voltar ao menu basta digite "Sair"
-------------------------------------------------------------------'''
+############################################################'''
 
         return menu, adicionar_tarefas, visualizar_tarefas, marcar_concluido, remover_tarefas
