@@ -16,16 +16,15 @@ Exemplos: Arrumar a Cama, Estudar Inglês, Ir a Igreja
 ----> Para voltar ao menu basta digite "Sair"
 ############################################################''')
         
-        visualizar_tarefas = '''############################################################
+        visualizar_tarefas = '''#############################################
 --- Menu Para Apresentar as Tarefas Em Andamento ---'''
 
-        marcar_concluido = '''############################################################
+        marcar_concluido = '''\n#############################################
 --- Menu de Alteração dos Status das Tarefas ---
 Para alterar o status de uma tarefa, basta digitar uma das opções abaixo:
 -> Concluido
 -> Pausado
-----> Para voltar ao menu basta digite "Sair"
-'''
+----> Para voltar ao menu basta digite "Sair"'''
 
         remover_tarefas = '''############################################################
 --- Menu Para Remover Tarefas --- 

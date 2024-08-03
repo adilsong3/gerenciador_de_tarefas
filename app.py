@@ -30,18 +30,41 @@ import pandas as pd
 import os
 from datetime import datetime
 from menu import menu_de_opcoes
+import sqlite3
+from time import sleep
+from log import *
 
-df_global = pd.DataFrame(columns=['data', 'tarefa', 'status'])
+df_global = None
 
 class GerenciadorTarefas:
     def __init__(self) -> None:
         self.main()
 
+
+    def criar_conectar_banco(self):
+        conexao = sqlite3.connect('tarefas.db')
+        cursor = conexao.cursor()
+        cursor.execute('''
+        CREATE TABLE IF NOT EXISTS tarefas (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            data TEXT NOT NULL,
+            tarefa TEXT NOT NULL,
+            status TEXT NOT NULL
+        )
+        ''')
+        conexao.commit()
+        return conexao
+
     # 2. Adicionar Tarefas:
     def adicionar_tarefas(self):
         global df_global
+
+        conexao = self.criar_conectar_banco()
         hoje = datetime.now().strftime('%Y-%m-%d')  # Formata a data como 'YYYY-MM-DD'
         status = 'Em andamento'
+
+        if df_global is None:
+            df_global = pd.read_sql_query('SELECT * FROM tarefas', conexao)
 
         while True:
             print(menu_de_opcoes()[1])
@@ -56,7 +79,8 @@ class GerenciadorTarefas:
                     'status': [status] * len(tarefas)
                 })
                 df_global = pd.concat([df_global, novas_tarefas_df], ignore_index=True)
-                print(f'\nTarefas Adicionadas com Sucesso: \n{nova_tarefa}')
+                os.system('cls' if os.name == 'nt' else 'clear')
+                print(f'Tarefas Adicionadas com Sucesso: \n{nova_tarefa}')
             else:
                 novas_tarefas_df = pd.DataFrame({
                     'data': [hoje],
@@ -64,15 +88,18 @@ class GerenciadorTarefas:
                     'status': [status]
                 })
                 df_global = pd.concat([df_global, novas_tarefas_df], ignore_index=True)
-            print(f'\nTarefa Adicionada com Sucesso: \n{nova_tarefa}')
-
-            
+            os.system('cls' if os.name == 'nt' else 'clear')
+            print(f'Tarefa Adicionada com Sucesso: \n{nova_tarefa}')
+        
+        conexao.close()
 
     # 3. Visualizar Tarefas:
     def visualizar_tarefas(self):
         global df_global
         
-        if len(df_global) == 0:
+        conn = self.criar_conectar_banco()
+
+        if df_global is None:
             print('Não há tarefas em andamento')
         else:
             print(menu_de_opcoes()[2])
@@ -82,7 +109,18 @@ class GerenciadorTarefas:
             escolha = input('Digite "sair" para voltar ao menu: ').strip()
             if escolha.lower() == 'sair' or escolha.lower() == '"sair"':
                 break
-
+    
+    def apresentar_resposta_da_funcao_status(self, tarefa, encontrado):
+        if encontrado == 'sim':
+            os.system('cls' if os.name == 'nt' else 'clear')
+            print(f'Status da Tarefa {tarefa} alterado com sucesso')
+            print(menu_de_opcoes()[2])
+            print(df_global)
+        else:
+            os.system('cls' if os.name == 'nt' else 'clear')
+            print(f'Tarefa {tarefa} não encontrada.')
+            print(menu_de_opcoes()[2])
+            print(df_global)
 
     # 4. Marcar Tarefas como Concluídas:
     def alterar_status_tarefas(self):
@@ -98,8 +136,8 @@ class GerenciadorTarefas:
             print(df_global)
         while True:
             print(menu_de_opcoes()[3])
+            print('#############################################')
             escolha = input('Digite o nome da tarefa: ').strip()
-            os.system('cls' if os.name == 'nt' else 'clear')
             if escolha.lower() == 'sair' or escolha.lower() == '"sair"':
                 break
             else:
@@ -116,19 +154,17 @@ class GerenciadorTarefas:
                                     tarefa_nao_encontrada.append(tarefa)
                                 else:
                                     tarefa_encontrada.append(tarefa)
-
                             if tarefa_encontrada:
                                 df_global.loc[df_comparacao['tarefa'].isin(tarefa_encontrada), 'status'] = novo_status
-                                print(f'Status da Tarefa {tarefa_encontrada} alterado com sucesso')
+                                self.apresentar_resposta_da_funcao_status(tarefa_encontrada, 'sim')
                             if tarefa_nao_encontrada:
-                                print(f'Tarefa {tarefa_nao_encontrada} não encontrada.')
+                                self.apresentar_resposta_da_funcao_status(tarefa_nao_encontrada, 'nao')
                         else:
                             if escolha.lower() not in df_global['tarefa'].str.lower().tolist():
-                                print(f'Tarefa "{escolha}" não encontrada.\n')
-                                print(df_global)
+                                self.apresentar_resposta_da_funcao_status(escolha, 'nao')
                             else: 
                                 df_global.loc[df_comparacao['tarefa'] == escolha, 'status'] = novo_status
-                                print(f"Status da Tarefa '{escolha}' alterado com sucesso.")
+                                self.apresentar_resposta_da_funcao_status(escolha, 'sim')
                         break
                     else:
                         print('Status não aceito, tente novamente!')
@@ -155,20 +191,16 @@ class GerenciadorTarefas:
                 tarefas_para_remover_sem_espacos = [tarefa.strip() for tarefa in tarefas_para_remover]
                 tarefa_nao_encontrada = []
                 tarefa_encontrada = []
-
                 for tarefa in tarefas_para_remover_sem_espacos:
                     if tarefa not in df_global['tarefa'].str.lower().tolist():
                         tarefa_nao_encontrada.append(tarefa)
                     else:
                         tarefa_encontrada.append(tarefa)
-                
                 if tarefa_encontrada:
-                    # Remove as tarefas especificadas
                     df_global = df_global[~df_comparacao['tarefa'].isin(tarefa_encontrada)]
                     print(f'Tarefa {tarefa_encontrada} removida com sucesso')
                 if tarefa_nao_encontrada:
                     print(f'Tarefa {tarefa_nao_encontrada} não encontrada.')
-                
             else:
                 if escolha.lower() not in df_global['tarefa'].str.lower().tolist():
                     print(f'Tarefa "{escolha}" não encontrada.')
@@ -176,13 +208,26 @@ class GerenciadorTarefas:
                     df_global = df_global[df_comparacao['tarefa'] != escolha.lower()]
                     print(f"Tarefa '{escolha}' removida com sucesso.")
 
-
     # 6. Salvar e Carregar Tarefas:
     def salvar_e_carregar_tarefas(self):
-        ''
+        global df_global
+        conn = self.criar_conectar_banco()
+        print("Salvando dados no banco de dados...")
+        loading_bar(10)
+        try:
+            df_global.to_sql('tarefas', conn, if_exists='replace', index=False)
+            print("Dados salvos no banco de dados com sucesso.")
+            sleep(5)
+        except Exception as e:
+            print(f"Erro ao salvar no banco de dados: {e}")
+        finally:
+            conn.close()
 
     def main(self):
         global df_global
+        conexao = self.criar_conectar_banco()
+        if df_global is None:
+            df_global = pd.read_sql_query('SELECT * FROM tarefas', conexao)
         menu = menu_de_opcoes()[0]
         while True:
             os.system('cls' if os.name == 'nt' else 'clear')
@@ -205,14 +250,17 @@ class GerenciadorTarefas:
                 self.remover_tarefas()
                 
             elif escolha == '5':
+                os.system('cls' if os.name == 'nt' else 'clear')
                 self.salvar_e_carregar_tarefas()
 
             elif escolha == '6':
+                os.system('cls' if os.name == 'nt' else 'clear')
+                self.salvar_e_carregar_tarefas()
+                print('Programa Finalizado com Sucesso!')
                 break
             else:
                 os.system('cls' if os.name == 'nt' else 'clear')
                 print('Opção inválida, tente novamente!!!\n')
                 pass
         
-
 gerenciador = GerenciadorTarefas()
