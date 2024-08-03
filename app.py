@@ -1,31 +1,4 @@
-# Funcionalidades que o projeto deve possuir:
-# 1. Menu de opções
-# ○ Ao inicializar o programa, deve ser exibido um menu de opções com as escolhas
-# de o que pode ser feito
-# 2. Adicionar Tarefas:
-# ○ Permitir ao usuário adicionar uma nova tarefa com uma descrição.
-# 3. Visualizar Tarefas:
-# ○ Exibir todas as tarefas, indicando quais estão concluídas e quais ainda estão
-# pendentes.
-# 4. Marcar Tarefas como Concluídas:
-# ○ Permitir ao usuário marcar uma tarefa específica como concluída.
-# 5. Remover Tarefas:
-# ○ Permitir ao usuário remover uma tarefa específica da lista.
-# 6. Salvar e Carregar Tarefas:
-# ○ Salvar a lista de tarefas em um arquivo para que elas possam ser carregadas na
-# próxima execução do programa.
-# 7. Ter a Persistência de dados
-# ○ Todos os dados que foram inseridos ou modificados pelo usuário devem ser
-# persistidos(ou seja, devem ser armazenados em algum local que não irá sumir
-# após o programa fechar)
-# ○ Recomendo que use um banco de dados SQLite3(por ser o mais simples de
-# começar), deixei o link das aulas recomendadas abaixo)
-# 8. Ser entregue como um executável
-# ○ O programa deve ser entregue como um executável, para que o usuário possa o
-# utilizar, sem a necessidade de instalar ferramentas no seu computador.
-# 9. (bônus) - Personalização
-# ○ Customize
-
+# Bibliotecas utilizadas
 import pandas as pd
 import os
 from datetime import datetime
@@ -34,13 +7,15 @@ import sqlite3
 from time import sleep
 from log import *
 
+# variavel global temporaria
 df_global = None
 
 class GerenciadorTarefas:
+    # função para iniciar o programa
     def __init__(self) -> None:
         self.main()
 
-
+    # Criar conexão no banco de dados
     def criar_conectar_banco(self):
         conexao = sqlite3.connect('tarefas.db')
         cursor = conexao.cursor()
@@ -55,16 +30,13 @@ class GerenciadorTarefas:
         conexao.commit()
         return conexao
 
-    # 2. Adicionar Tarefas:
+    # Adicionar Tarefas:
     def adicionar_tarefas(self):
         global df_global
 
         conexao = self.criar_conectar_banco()
         hoje = datetime.now().strftime('%Y-%m-%d')  # Formata a data como 'YYYY-MM-DD'
         status = 'Em andamento'
-
-        if df_global is None:
-            df_global = pd.read_sql_query('SELECT * FROM tarefas', conexao)
 
         while True:
             print(menu_de_opcoes()[1])
@@ -93,23 +65,22 @@ class GerenciadorTarefas:
         
         conexao.close()
 
-    # 3. Visualizar Tarefas:
+    # Visualizar Tarefas
     def visualizar_tarefas(self):
         global df_global
-        
-        conn = self.criar_conectar_banco()
 
-        if df_global is None:
+        if df_global.empty:
             print('Não há tarefas em andamento')
         else:
             print(menu_de_opcoes()[2])
             print(df_global)
-            print('############################################################')
+            print('#############################################')
         while True:
             escolha = input('Digite "sair" para voltar ao menu: ').strip()
             if escolha.lower() == 'sair' or escolha.lower() == '"sair"':
                 break
     
+    # Apresentar a resposta da função de alterar status
     def apresentar_resposta_da_funcao_status(self, tarefa, encontrado):
         if encontrado == 'sim':
             os.system('cls' if os.name == 'nt' else 'clear')
@@ -122,7 +93,7 @@ class GerenciadorTarefas:
             print(menu_de_opcoes()[2])
             print(df_global)
 
-    # 4. Marcar Tarefas como Concluídas:
+    # Alterar status das tarefas
     def alterar_status_tarefas(self):
         global df_global
 
@@ -132,7 +103,7 @@ class GerenciadorTarefas:
         if len(df_global) == 0:
             print('Não há tarefas em andamento')
         else:
-            print(menu_de_opcoes()[2])
+            print('--- Tarefas Disponíveis Para Alterar o Status ---')
             print(df_global)
         while True:
             print(menu_de_opcoes()[3])
@@ -169,7 +140,7 @@ class GerenciadorTarefas:
                     else:
                         print('Status não aceito, tente novamente!')
 
-    # 5. Remover Tarefas:
+    # Remover Tarefas
     def remover_tarefas(self):
         global df_global
 
@@ -179,7 +150,7 @@ class GerenciadorTarefas:
         if len(df_global) == 0:
             print('Não há tarefas em andamento')
         else:
-            print(menu_de_opcoes()[2])
+            print('--- Tarefas Disponíveis Para Remover ---')
             print(df_global)
             print(menu_de_opcoes()[4])
         while True:
@@ -208,23 +179,27 @@ class GerenciadorTarefas:
                     df_global = df_global[df_comparacao['tarefa'] != escolha.lower()]
                     print(f"Tarefa '{escolha}' removida com sucesso.")
 
-    # 6. Salvar e Carregar Tarefas:
+    # Salvar e Carregar Tarefas
     def salvar_e_carregar_tarefas(self):
         global df_global
         conn = self.criar_conectar_banco()
-        print("Salvando dados no banco de dados...")
-        loading_bar(10)
+        print("Salvando dados no banco...")
+        loading_bar(5)
         try:
             df_global.to_sql('tarefas', conn, if_exists='replace', index=False)
             print("Dados salvos no banco de dados com sucesso.")
-            sleep(5)
+            sleep(2)
+            print('Redirecionando ao Menu Principal')
+            sleep(2)
         except Exception as e:
             print(f"Erro ao salvar no banco de dados: {e}")
         finally:
             conn.close()
 
+    # Função principal que chama todas as outras
     def main(self):
         global df_global
+        resetar_cor = '\033[0m'
         conexao = self.criar_conectar_banco()
         if df_global is None:
             df_global = pd.read_sql_query('SELECT * FROM tarefas', conexao)
@@ -232,7 +207,7 @@ class GerenciadorTarefas:
         while True:
             os.system('cls' if os.name == 'nt' else 'clear')
             print(menu)
-            escolha = str(input('Digite a opção da sua escolha (1,2,3,4,5 ou 6): ')).strip()
+            escolha = str(input(f'Digite a opção da sua escolha (\033[94m1{resetar_cor},\033[92m2{resetar_cor},\033[91m3{resetar_cor},\033[93m4{resetar_cor},\033[95m5{resetar_cor} ou \033[96m6{resetar_cor}): ')).strip()
             if escolha == '1':
                 os.system('cls' if os.name == 'nt' else 'clear')
                 self.adicionar_tarefas()
