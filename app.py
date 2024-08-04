@@ -100,45 +100,49 @@ class GerenciadorTarefas:
         df_comparacao = df_global.copy()
         df_comparacao['tarefa'] = df_comparacao['tarefa'].str.lower()
 
-        if len(df_global) == 0:
+        if df_global.empty:
             print('Não há tarefas em andamento')
-        else:
-            print('--- Tarefas Disponíveis Para Alterar o Status ---')
-            print(df_global)
-        while True:
-            print(menu_de_opcoes()[3])
-            print('#############################################')
-            escolha = input('Digite o nome da tarefa: ').strip()
-            if escolha.lower() == 'sair' or escolha.lower() == '"sair"':
-                break
-            else:
-                while True:
-                    novo_status = input('Digite o novo status das tarefas: ').strip()
-                    if novo_status.lower() in ('concluido','pausado'):
-                        if ',' in escolha:
-                            tarefa_escolhida = escolha.split(',')
-                            tarefa_escolhida = [tarefa.strip() for tarefa in tarefa_escolhida]
-                            tarefa_nao_encontrada = []
-                            tarefa_encontrada = []
-                            for tarefa in tarefa_escolhida:
-                                if tarefa not in df_global['tarefa'].str.lower().tolist():
-                                    tarefa_nao_encontrada.append(tarefa)
-                                else:
-                                    tarefa_encontrada.append(tarefa)
-                            if tarefa_encontrada:
-                                df_global.loc[df_comparacao['tarefa'].isin(tarefa_encontrada), 'status'] = novo_status
-                                self.apresentar_resposta_da_funcao_status(tarefa_encontrada, 'sim')
-                            if tarefa_nao_encontrada:
-                                self.apresentar_resposta_da_funcao_status(tarefa_nao_encontrada, 'nao')
+            sleep(2)
+            print('Redirecionando Para o Menu Principal')
+            sleep(2)
+        else:    
+            while True:
+                os.system('cls' if os.name == 'nt' else 'clear')
+                print('--- Tarefas Disponíveis Para Alterar o Status ---')
+                print(df_global)
+                print(menu_de_opcoes()[3])
+                print('#############################################')
+                escolha = input('Digite o nome da tarefa: ').strip()
+                if escolha.lower() == 'sair' or escolha.lower() == '"sair"':
+                    break
+                else:
+                    while True:
+                        novo_status = input('Digite o novo status das tarefas: ').strip()
+                        if novo_status.lower() in ('concluido','pausado'):
+                            if ',' in escolha:
+                                tarefa_escolhida = escolha.split(',')
+                                tarefa_escolhida = [tarefa.strip() for tarefa in tarefa_escolhida]
+                                tarefa_nao_encontrada = []
+                                tarefa_encontrada = []
+                                for tarefa in tarefa_escolhida:
+                                    if tarefa not in df_global['tarefa'].str.lower().tolist():
+                                        tarefa_nao_encontrada.append(tarefa)
+                                    else:
+                                        tarefa_encontrada.append(tarefa)
+                                if tarefa_encontrada:
+                                    df_global.loc[df_comparacao['tarefa'].isin(tarefa_encontrada), 'status'] = novo_status
+                                    self.apresentar_resposta_da_funcao_status(tarefa_encontrada, 'sim')
+                                if tarefa_nao_encontrada:
+                                    self.apresentar_resposta_da_funcao_status(tarefa_nao_encontrada, 'nao')
+                            else:
+                                if escolha.lower() not in df_global['tarefa'].str.lower().tolist():
+                                    self.apresentar_resposta_da_funcao_status(escolha, 'nao')
+                                else: 
+                                    df_global.loc[df_comparacao['tarefa'] == escolha, 'status'] = novo_status
+                                    self.apresentar_resposta_da_funcao_status(escolha, 'sim')
+                            break
                         else:
-                            if escolha.lower() not in df_global['tarefa'].str.lower().tolist():
-                                self.apresentar_resposta_da_funcao_status(escolha, 'nao')
-                            else: 
-                                df_global.loc[df_comparacao['tarefa'] == escolha, 'status'] = novo_status
-                                self.apresentar_resposta_da_funcao_status(escolha, 'sim')
-                        break
-                    else:
-                        print('Status não aceito, tente novamente!')
+                            print('Status não aceito, tente novamente!')
 
     # Remover Tarefas
     def remover_tarefas(self):
